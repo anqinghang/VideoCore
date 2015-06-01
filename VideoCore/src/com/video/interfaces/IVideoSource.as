@@ -6,7 +6,7 @@ package com.video.interfaces
 	public interface IVideoSource
 	{
 		
-		function connect(conntionURL:String = null, streamURL:String = null, backFun:Function = null, faultRetryTime:int = 3):void;
+		function connect(conntionURL:String=null, streamURL:String = null, backFun:Function = null, faultRetryTime:int = 3):void;
 		
 		function get stream():NetStream;
 		function get connection():NetConnection;
@@ -38,5 +38,13 @@ package com.video.interfaces
 		function set bufferTime(value:int):void
 		
 		function close():void;
+		/**
+		 * 播放
+		 */		
+		function play():void;
+		/**
+		 * 暂停
+		 */		
+		function pause():void;
 	}
 }

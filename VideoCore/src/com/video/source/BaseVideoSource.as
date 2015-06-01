@@ -68,16 +68,16 @@ package com.video.source
 				case "NetConnection.Connect.Success" : 
 					initStream();
 					handlerStreamEvents();
-					invoke({"type":VideoSourceInfo.CONNECTED, "code":event.info.code}, _streamURL);
+					invoke({"type":VSInfo.CONNECTED, "code":event.info.code}, _streamURL);
 					break;
 				case "NetConnection.Connect.Closed":            //由服务器端,返回 关闭事件
-					invoke({"type":VideoSourceInfo.CONNECTED_CLOSE, "code":event.info.code});
+					invoke({"type":VSInfo.CONNECTED_CLOSE, "code":event.info.code});
 					break;
 				case "NetConnection.Connect.Failed":            //尝试连接失败   //再试 ?????
-					invoke({"type":VideoSourceInfo.CONNECTED_FAILED, "code":event.info.code});
+					invoke({"type":VSInfo.CONNECTED_FAILED, "code":event.info.code});
 					break;
 				case "NetConnection.Connect.Rejected":          //没有权限,拒接访问  //关闭
-					invoke({"type":VideoSourceInfo.CONNECTED_REJECTED, "code":event.info.code});
+					invoke({"type":VSInfo.CONNECTED_REJECTED, "code":event.info.code});
 					break;
 			}
 		}
@@ -132,17 +132,17 @@ package com.video.source
 			_info = info;
 			
 			log("文件信息已获取");
-			invoke({"type":VideoSourceInfo.META_DATA, "code":"meta data"}, info);
+			invoke({"type":VSInfo.META_DATA, "code":"meta data"}, info);
 		}
 		
 		protected function onPlayStatus(info:Object):void {
 			if (info.code == "NetStream.Play.Complete") {
-				invoke({"type":VideoSourceInfo.FINISHED, "code":info.code}, null);
+				invoke({"type":VSInfo.FINISHED, "code":info.code}, null);
 			}
 		}
 		
 		protected function onErrorHandler(e:Event):void {
-			invoke({"type":VideoSourceInfo.FAULT, "code":""}, "Stream not found!");
+			invoke({"type":VSInfo.FAULT, "code":""}, "Stream not found!");
 		}
 		
 		protected function onStreamHandler(event:NetStatusEvent):void {
@@ -152,59 +152,59 @@ package com.video.source
 				case "NetStream.Play.Reset":
 					break;
 				case "NetStream.Connect.Success" : 
-					_type = VideoSourceInfo.CONNECTED;
+					_type = VSInfo.CONNECTED;
 					break;
 				case "NetStream.Play.Start" : 
-					_type = VideoSourceInfo.START;
+					_type = VSInfo.START;
 					_bytesTotal = _stream.bytesTotal;
 					break;
 				case "NetStream.Buffer.Full" : 
-					_type = VideoSourceInfo.BUFFER_FULL;
+					_type = VSInfo.BUFFER_FULL;
 					break;
 				case "NetStream.Buffer.Empty" : 
-					_type = VideoSourceInfo.BUFFER_EMPTY;
+					_type = VSInfo.BUFFER_EMPTY;
 					break;
 				case "NetStream.Pause.Notify" : 
-					_type = VideoSourceInfo.PAUSE;
+					_type = VSInfo.PAUSE;
 					_data = event.currentTarget.info.resourceName;
 					break;
 				case "NetStream.Unpause.Notify" : 
-					_type = VideoSourceInfo.RESUME;
+					_type = VSInfo.RESUME;
 					break;
 				case "NetStream.Buffer.Flush" : 
-					_type = VideoSourceInfo.BUFFER_FLUSH;
+					_type = VSInfo.BUFFER_FLUSH;
 					break;
 				case "NetStream.Play.Stop" : 
-					_type = VideoSourceInfo.STOP;
+					_type = VSInfo.STOP;
 					break;
 				case "NetStream.SeekStart.Notify" : 
-					_type = VideoSourceInfo.SEEK_START;
+					_type = VSInfo.SEEK_START;
 					_data = event.info;
 					break;
 				case "NetStream.Play.StreamNotFound" : 
-					_type = VideoSourceInfo.STREAM_NOT_FOUND;
+					_type = VSInfo.STREAM_NOT_FOUND;
 					log("找不到视频文件,连接: " + _connectionURL + ", 地址: " +  _streamURL);
 					break;
 				case "NetStream.Seek.Notify" : 
-					_type = VideoSourceInfo.SEEK;
+					_type = VSInfo.SEEK;
 					_data = event.info;
 					break;
 				//p2p
 				case "NetStream.Connect.Failed" : 
-					_type = VideoSourceInfo.P2P_FAILED;
+					_type = VSInfo.P2P_FAILED;
 					_data = "P2P";
 					break;
 				case "NetStream.Connect.Closed" : 
-					_type = VideoSourceInfo.P2P_CLOSED;
+					_type = VSInfo.P2P_CLOSED;
 					break;
 				case "NetStream.Connect.Rejected" : 
-					_type = VideoSourceInfo.P2P_REJECTED;
+					_type = VSInfo.P2P_REJECTED;
 					break;
 				case "NetStream.Video.DimensionChange" : 
-					_type = VideoSourceInfo.DIMONSION_CHANGE;
+					_type = VSInfo.DIMONSION_CHANGE;
 					break;
 				case "NetStream.Publish.Start":
-					_type = VideoSourceInfo.PUBLISH;
+					_type = VSInfo.PUBLISH;
 					break;
 				default:
 					break;
@@ -218,8 +218,9 @@ package com.video.source
 		 * 
 		 */		
 		public function log(value:String):void {
-//			var evt:Event = new VideoSouceEvent(VideoSouceEvent.VIDEO_SOURCE_INFO, value);
-			trace(value);
+			if (_invokeFunc != null) {
+				_invokeFunc.call(null, VSInfo.LOG, value);
+			}
 		}
 		
 		/**
@@ -229,7 +230,6 @@ package com.video.source
 		 * 
 		 */		
 		protected function invoke(obj:Object, data:Object = null):void {
-			log("视频状态: " + obj.type + ", code: " + obj.code);
 			_currentVideoStatus = obj.type;
 			if (_invokeFunc != null) {
 				_invokeFunc.call(null, obj.type, data);
@@ -362,6 +362,18 @@ package com.video.source
 		public function get bufferTime():int
 		{
 			return _bufferTime;
+		}
+		
+		public function play():void {
+			if(_stream){
+				_stream.resume();
+			}
+		}
+		
+		public function pause():void {
+			if(_stream){
+				_stream.pause();
+			}
 		}
 
 	}
